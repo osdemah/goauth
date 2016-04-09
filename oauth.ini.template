@@ -1,0 +1,5 @@
+[google]
+ClientID =  google_client_id_here
+ClientSecret =  google_client_secret_here
+RedirectURL = google_redirect_url_here
+Scopes = https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile
