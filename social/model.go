@@ -4,6 +4,10 @@ type OauthConfig struct {
 	ClientID string
 	ClientSecret string
 	RedirectURL string
+	LoginURL string
+	LogoutURL string
+	ErrorURL string
+	CallbackURL string
 	Scopes []string
 }
 

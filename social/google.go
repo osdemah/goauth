@@ -13,6 +13,11 @@ import(
 )
 
 func GoogleOauthStruct(config OauthConfig) martini.Handler{
+	oauth2.PathCallback = config.CallbackURL
+	oauth2.PathError = config.ErrorURL
+	oauth2.PathLogin = config.LoginURL
+	oauth2.PathLogout = config.LogoutURL
+
 	return oauth2.Google(
 		&goauth2.Config{
 			ClientID:     config.ClientID,
