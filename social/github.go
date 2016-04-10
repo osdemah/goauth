@@ -10,6 +10,7 @@ import(
 	"github.com/martini-contrib/oauth2"
 	goauth2 "golang.org/x/oauth2"
 	"fmt"
+	"encoding/json"
 )
 
 func GithubOauthStruct(config OauthConfig) martini.Handler{
@@ -60,6 +61,12 @@ func GithubProfileJson(token string) string{
 	}
 
 	return string(contents)
+}
+
+func GithubProfileStruct(token string) Github{
+	github := new(Github)
+	json.Unmarshal([]byte(GoogleProfileJson(token)), &*github)
+	return *github
 }
 
 
