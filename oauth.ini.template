@@ -16,4 +16,4 @@ LoginURL = /auth/github/login
 LogoutURL = /auth/logout
 ErrorURL = /auth/github/oauth2error
 CallbackURL = /auth/github/oauth2callback
-Scopes = user
+Scopes =
