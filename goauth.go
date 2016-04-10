@@ -12,16 +12,16 @@ import (
 
 func main() {
 	m := martini.Classic()
-	m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
+	m.Use(sessions.Sessions("goauth_github", sessions.NewCookieStore([]byte("secret123"))))
 
-	m.Use(social.GoogleOauthConfig("oauth.ini"))
+	m.Use(social.GithubOauthConfig("oauth.ini"))
 
 	m.Get("/", oauth2.LoginRequired, func(tokens oauth2.Tokens) string {
 		if tokens.Expired() {
 			return "not logged in, or the access token is expired"
 		}
 		fmt.Println(tokens.Access())
-		return social.GoogleProfileJson(tokens.Access())
+		return social.GithubProfileJson(tokens.Access())
 	})
 
 	m.Get("/restrict", oauth2.LoginRequired, func(tokens oauth2.Tokens) string {
