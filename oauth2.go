@@ -9,34 +9,54 @@ import(
 )
 
 func AuthHandler(res http.ResponseWriter, req *http.Request, params martini.Params){
-	if !StringInSlice(params["provider"], GetProviders("oauth.ini")){
-		res.Write([]byte("invalid provider"))
+	providers, err := GetProviders("oauth.ini")
+	if err != nil {
+		http.Error(res, err.Error(), 500)
 		return
 	}
-	conf := OauthFromConfig("oauth.ini", params["provider"])
+	if !StringInSlice(params["provider"], providers){
+		http.Error(res, "invalid provider", 500)
+		return
+	}
+	conf, err := OauthFromConfig("oauth.ini", params["provider"])
+	if err != nil {
+		http.Error(res, err.Error(), 500)
+		return
+	}
 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	http.Redirect(res, req, url, http.StatusTemporaryRedirect)
 }
 
-func CallbackHandler (res http.ResponseWriter, req *http.Request, params martini.Params) (int, string){
-	if !StringInSlice(params["provider"], GetProviders("oauth.ini")){
-		return 404, "provider not supported"
+func CallbackHandler (res http.ResponseWriter, req *http.Request, params martini.Params){
+	providers, err := GetProviders("oauth.ini")
+	if err != nil {
+		http.Error(res, err.Error(), 500)
+		return
 	}
-	conf := OauthFromConfig("oauth.ini", params["provider"])
+	if !StringInSlice(params["provider"], providers){
+		http.Error(res, "invalid provider", 500)
+		return
+	}
+	conf, err := OauthFromConfig("oauth.ini", params["provider"])
+	if err != nil {
+		http.Error(res, err.Error(), 500)
+		return
+	}
 	code := req.URL.Query().Get("code")
 	tok, err := conf.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		log.Fatal(err)
-		return 401, "Unauthorized"
+		http.Error(res, err.Error(), 500)
+		return
 	}
-	return 200, tok.AccessToken
+	res.Write([]byte(tok.AccessToken))
 }
 
-func GetProviders(filepath string) []string{
+func GetProviders(filepath string) ([]string, error){
 	cfg, err := ini.Load(filepath)
 
 	if err != nil{
-		log.Fatal(err)
+		log.Println(err)
+		return nil, err
 	}
 
 	lists := new(Lists)
@@ -44,10 +64,11 @@ func GetProviders(filepath string) []string{
 	err = cfg.Section("lists").MapTo(lists)
 
 	if err != nil{
-		log.Fatal(err)
+		log.Println(err)
+		return nil, err
 	}
 
-	return lists.Providers
+	return lists.Providers, nil
 }
 
 func OauthFromStruct(config OauthConfig) oauth2.Config{
@@ -63,11 +84,12 @@ func OauthFromStruct(config OauthConfig) oauth2.Config{
 	}
 }
 
-func OauthFromConfig(filepath string, provider string) oauth2.Config{
+func OauthFromConfig(filepath string, provider string) (oauth2.Config, error){
 	cfg, err := ini.Load(filepath)
 
 	if err != nil{
-		log.Fatal(err)
+		log.Println(err)
+		return oauth2.Config{}, err
 	}
 
 	oauth := new(OauthConfig)
@@ -75,10 +97,11 @@ func OauthFromConfig(filepath string, provider string) oauth2.Config{
 	err = cfg.Section(provider).MapTo(oauth)
 
 	if err != nil{
-		log.Fatal(err)
+		log.Println(err)
+		return oauth2.Config{}, err
 	}
 
-	return OauthFromStruct(*oauth)
+	return OauthFromStruct(*oauth), nil
 }
 
 
