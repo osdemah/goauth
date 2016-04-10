@@ -4,8 +4,33 @@ import(
 	"log"
 	"github.com/go-ini/ini"
 	"golang.org/x/oauth2"
+	"net/http"
+	"github.com/go-martini/martini"
 )
 
+func AuthHandler(res http.ResponseWriter, req *http.Request, params martini.Params){
+	if !StringInSlice(params["provider"], GetProviders("oauth.ini")){
+		res.Write([]byte("invalid provider"))
+		return
+	}
+	conf := OauthFromConfig("oauth.ini", params["provider"])
+	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	http.Redirect(res, req, url, http.StatusTemporaryRedirect)
+}
+
+func CallbackHandler (res http.ResponseWriter, req *http.Request, params martini.Params) (int, string){
+	if !StringInSlice(params["provider"], GetProviders("oauth.ini")){
+		return 404, "provider not supported"
+	}
+	conf := OauthFromConfig("oauth.ini", params["provider"])
+	code := req.URL.Query().Get("code")
+	tok, err := conf.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		log.Fatal(err)
+		return 401, "Unauthorized"
+	}
+	return 200, tok.AccessToken
+}
 
 func GetProviders(filepath string) []string{
 	cfg, err := ini.Load(filepath)
