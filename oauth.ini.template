@@ -1,19 +1,18 @@
+[lists]
+providers = google, github
+
 [google]
 ClientID =  google_client_id_here
 ClientSecret =  google_client_secret_here
-RedirectURL = google_redirect_url_here
-LoginURL = /auth/google/login
-LogoutURL = /auth/logout
-ErrorURL = /auth/google/oauth2error
-CallbackURL = /auth/google/oauth2callback
+CallbackURL = http://your_web_address/auth/google/oauth2callback
+AuthURL = https://accounts.google.com/o/oauth2/auth
+TokenURL = https://accounts.google.com/o/oauth2/token
 Scopes = https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile
 
 [github]
 ClientID =  github_client_id_here
 ClientSecret =  github_client_secret_here
-RedirectURL = github_redirect_url_here
-LoginURL = /auth/github/login
-LogoutURL = /auth/logout
-ErrorURL = /auth/github/oauth2error
-CallbackURL = /auth/github/oauth2callback
+CallbackURL = http://your_web_address/auth/github/oauth2callback
+AuthURL = https://github.com/login/oauth/authorize
+TokenURL = https://github.com/login/oauth/access_token
 Scopes =

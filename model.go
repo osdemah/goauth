@@ -1,15 +1,17 @@
-package social
+package goauth
 
 import "time"
+
+type Lists struct{
+	Providers []string
+}
 
 type OauthConfig struct {
 	ClientID string
 	ClientSecret string
-	RedirectURL string
-	LoginURL string
-	LogoutURL string
-	ErrorURL string
 	CallbackURL string
+	AuthURL string
+	TokenURL string
 	Scopes []string
 }
 
