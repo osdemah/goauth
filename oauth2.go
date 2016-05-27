@@ -1,56 +1,61 @@
 package goauth
 
 import (
-	"log"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-ini/ini"
 	"golang.org/x/oauth2"
 )
 
-func AuthHandler(c *gin.Context) {
-	providers, _ := GetProviders("oauth.ini")
-	log.Println(providers)
-	log.Println(c.Param("provider"))
-	if !StringInSlice(c.Param("provider"), providers) {
+type GOAuth struct {
+	Providers map[string]OauthConfig
+}
+
+func NewGOAuth() *GOAuth {
+	return &GOAuth{Providers: make(map[string]OauthConfig)}
+}
+
+func (goauth *GOAuth) AuthHandler(c *gin.Context) {
+	oauth, ok := goauth.Providers[c.Param("provider")]
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid provider",
 		})
 		return
 	}
-	conf, _ := OauthFromConfig("oauth.ini", c.Param("provider"))
+	conf := OauthFromStruct(oauth)
 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
-func CallbackHandler(c *gin.Context) {
-	providers, _ := GetProviders("oauth.ini")
-	if !StringInSlice(c.Param("provider"), providers) {
+func (goauth *GOAuth) CallbackHandler(c *gin.Context) {
+	oauth, ok := goauth.Providers[c.Param("provider")]
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid provider",
 		})
 		return
 	}
-	conf, _ := OauthFromConfig("oauth.ini", c.Param("provider"))
+	conf := OauthFromStruct(oauth)
 	code := c.Query("code")
 	tok, _ := conf.Exchange(oauth2.NoContext, code)
-	c.JSON(http.StatusOK, gin.H{
-		"token": tok.AccessToken,
-	})
-}
-
-func GetProviders(filepath string) ([]string, error) {
-	cfg, err := ini.Load(filepath)
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", oauth.ApiURL, nil)
+	req.Header.Add("Authorization", "Bearer "+tok.AccessToken)
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	profile := Profile{}
+	err := json.Unmarshal(body, &profile)
 	if err != nil {
-		return nil, err
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+		return
 	}
-	lists := new(Lists)
-	err = cfg.Section("lists").MapTo(lists)
-	if err != nil {
-		return nil, err
-	}
-	return lists.Providers, nil
+	c.JSON(http.StatusOK, profile)
 }
 
 func OauthFromStruct(config OauthConfig) oauth2.Config {
@@ -64,19 +69,4 @@ func OauthFromStruct(config OauthConfig) oauth2.Config {
 			TokenURL: config.TokenURL,
 		},
 	}
-}
-
-func OauthFromConfig(filepath string, provider string) (oauth2.Config, error) {
-	cfg, err := ini.Load(filepath)
-	if err != nil {
-		log.Println(err)
-		return oauth2.Config{}, err
-	}
-	oauth := new(OauthConfig)
-	err = cfg.Section(provider).MapTo(oauth)
-	if err != nil {
-		log.Println(err)
-		return oauth2.Config{}, err
-	}
-	return OauthFromStruct(*oauth), nil
 }

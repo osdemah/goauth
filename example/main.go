@@ -7,7 +7,19 @@ import (
 
 func main() {
 	r := gin.Default()
-	r.GET("/auth/:provider", goauth.AuthHandler)
-	r.GET("/auth/:provider/oauth2callback", goauth.CallbackHandler)
+	auth := goauth.NewGOAuth()
+	auth.Providers["google"] = goauth.OauthConfig{
+		ClientID:     "YOUR_CLIENT_ID",
+		ClientSecret: "YOUR_SECRET",
+		CallbackURL:  "http://127.0.0.1:3000/auth/google/oauth2callback",
+		AuthURL:      "https://accounts.google.com/o/oauth2/auth",
+		TokenURL:     "https://accounts.google.com/o/oauth2/token",
+		ApiURL:       "https://www.googleapis.com/oauth2/v2/userinfo?fields=email%2Cname%2Cpicture",
+		Scopes: []string{"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile"},
+	}
+
+	r.GET("/auth/:provider", auth.AuthHandler)
+	r.GET("/auth/:provider/oauth2callback", auth.CallbackHandler)
 	r.Run(":3000")
 }
