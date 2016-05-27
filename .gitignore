@@ -1,5 +1,8 @@
 /oauth.ini
 /goauth.iml
+/example/oauth.ini
 /.idea
 /test
 /auth.log
+goauth
+debug
