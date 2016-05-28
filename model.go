@@ -1,9 +1,5 @@
 package goauth
 
-type Lists struct {
-	Providers []string
-}
-
 type OauthConfig struct {
 	ClientID     string
 	ClientSecret string
