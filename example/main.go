@@ -1,9 +1,20 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hamed1soleimani/goauth"
 )
+
+func OauthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		//customize your needs in the middleware
+		//user profile and token are in the context variables
+		c.JSON(http.StatusOK, c.Value("profile"))
+	}
+}
 
 func main() {
 	r := gin.Default()
@@ -20,6 +31,6 @@ func main() {
 	}
 
 	r.GET("/auth/:provider", auth.AuthHandler)
-	r.GET("/auth/:provider/oauth2callback", auth.CallbackHandler)
+	r.GET("/auth/:provider/oauth2callback", OauthMiddleware(), auth.CallbackHandler)
 	r.Run(":3000")
 }

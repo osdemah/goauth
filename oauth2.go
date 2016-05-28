@@ -55,7 +55,8 @@ func (goauth *GOAuth) CallbackHandler(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, profile)
+	c.Set("profile", profile)
+	c.Set("token", tok.AccessToken)
 }
 
 func OauthFromStruct(config OauthConfig) oauth2.Config {
